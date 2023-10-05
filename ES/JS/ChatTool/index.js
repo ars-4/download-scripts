@@ -6,6 +6,14 @@ async function init() {
   container.style.right = '1%';
   container.style.bottom = '3%';
 
+  let style = document.getElementsByTagName('style')[0];
+  style.innerHTML += `\n
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+  }\n
+  `
+  document.head.appendChild(style);
+
   let button = document.createElement('button');
   button.innerText = "+";
   button.style.backgroundColor = '#f44336';
@@ -22,8 +30,8 @@ async function init() {
   button.style.zIndex = '2';
 
   let form = document.createElement('div');
-  form.style.width = '300px';
-  form.style.height = '400px';
+  form.style.width = '0px';
+  form.style.height = '0px';
   form.is_visible = false;
   form.style.backgroundColor = '#fff';
   form.style.border = '2px solid #242424';
@@ -33,9 +41,11 @@ async function init() {
   form.style.bottom = '24px';
   form.style.transition = '0.5s';
   form.style.overflow = 'hidden';
+  form.classList.add('no-scrollbar');
 
   let output = document.createElement('div');
   // output.style.border = '1px solid #242424';
+  output.style.overflowY = 'scroll';
   output.style.margin = '4px';
   output.style.marginTop = '12px';
   output.style.height = '320px';
@@ -104,8 +114,32 @@ async function init() {
 
   const socket = new WebSocket(`ws://${baseUri}/ws/chats/${localStorage.getItem('username').replace('#', '').toLowerCase()}/?token=${localStorage.getItem('token')}`);
 
-  socket.onopen = () => {
+  socket.onopen = async () => {
     console.log('connected');
+    let messages = await get_previous_messages();
+    output.innerHTML = '';
+
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i];
+      const output_message = document.createElement('div');
+      output_message.style.border = '1px solid #242424';
+      output_message.style.margin = '2%';
+      output_message.style.padding = '10px 15px';
+      output_message.style.backgroundColor = '#242424';
+      output_message.style.borderRadius = '4px';
+      output_message.style.fontSize = '12px';
+      output_message.style.fontWeight = 'bolder';
+      if(localStorage.getItem('username') == messages[i].user) {
+      output_message.innerHTML = `
+      <span style="color: #f44336">You:</span> <span style="color: #fff">${messages[i].message}</span>`;
+    } else {
+      output_message.innerHTML = `
+      <span style="color: #f44336">${messages[i].user}:</span> <span style="color: #fff">${messages[i].message}</span>`;
+    }output.appendChild(output_message);
+      output_message.scrollIntoView();
+    }
+
+    socket.send(JSON.stringify({ message: "Welcome to the chat", token: localStorage.getItem('token') }));
   }
 
   socket.onmessage = (event) => {
@@ -118,9 +152,17 @@ async function init() {
     output_message.style.borderRadius = '4px';
     output_message.style.fontSize = '12px';
     output_message.style.fontWeight = 'bolder';
+    if(localStorage.getItem('username') == data.user) {
+      output_message.innerHTML = `
+      <span style="color: #f44336">You:</span> <span style="color: #fff">${data.message}</span>`;
+    } else {
+      output_message.innerHTML = `
+      <span style="color: #f44336">${data.user}:</span> <span style="color: #fff">${data.message}</span>`;
+    }
     output_message.innerHTML = `
     <span style="color: #f44336">${data.user}:</span> <span style="color: #fff">${data.message}</span>`;
     output.appendChild(output_message);
+    output_message.scrollIntoView();
   }
 
 }
@@ -172,6 +214,21 @@ async function create_client() {
     localStorage.setItem('token', data.data.token);
     localStorage.setItem('username', data.data.username);
   })
+}
+
+async function get_previous_messages() {
+  let messages = await fetch(`http://${baseUri}/chat/api/messages/${localStorage.getItem('username').replace('#', '').toLowerCase()}/`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${localStorage.getItem('token')}`
+    }
+  }).then(response => {
+    return response.json()
+  }).then(data => {
+    return data.data;
+  })
+  return messages;
 }
 
 init();
