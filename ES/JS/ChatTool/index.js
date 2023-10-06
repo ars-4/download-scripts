@@ -79,16 +79,18 @@ async function init() {
   inputButton.style.cursor = 'pointer';
   inputGroup.appendChild(inputButton);
 
+  let url = window.location.href;
+
   inputButton.addEventListener('click', () => {
     const message = input.value;
-    socket.send(JSON.stringify({ message: message, token: localStorage.getItem('token')}));
+    socket.send(JSON.stringify({ message: message, token: localStorage.getItem('token'), url: url, msg_type: 'none' }));
     input.value = '';
   })
 
   input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       const message = input.value;
-      socket.send(JSON.stringify({ message: message, token: localStorage.getItem('token') }));
+      socket.send(JSON.stringify({ message: message, token: localStorage.getItem('token'), url: url, msg_type: 'none' }));
       input.value = '';
     }
   })
@@ -120,7 +122,6 @@ async function init() {
     output.innerHTML = '';
 
     for (let i = 0; i < messages.length; i++) {
-      const message = messages[i];
       const output_message = document.createElement('div');
       output_message.style.border = '1px solid #242424';
       output_message.style.margin = '2%';
@@ -129,40 +130,44 @@ async function init() {
       output_message.style.borderRadius = '4px';
       output_message.style.fontSize = '12px';
       output_message.style.fontWeight = 'bolder';
-      if(localStorage.getItem('username') == messages[i].user) {
-      output_message.innerHTML = `
+      if (localStorage.getItem('username') == messages[i].user) {
+        output_message.innerHTML = `
       <span style="color: #f44336">You:</span> <span style="color: #fff">${messages[i].message}</span>`;
-    } else {
-      output_message.innerHTML = `
+      } else {
+        output_message.innerHTML = `
       <span style="color: #f44336">${messages[i].user}:</span> <span style="color: #fff">${messages[i].message}</span>`;
-    }output.appendChild(output_message);
+      } output.appendChild(output_message);
       output_message.scrollIntoView();
     }
 
-    socket.send(JSON.stringify({ message: "Welcome to the chat", token: localStorage.getItem('token') }));
+    socket.send(JSON.stringify({ message: "Welcome to the chat", token: localStorage.getItem('token'), url: url, msg_type: 'none' }));
   }
+
+  window.addEventListener("hashchange", function(event) {
+    socket.send(JSON.stringify({ message: "Welcome to the chat", token: localStorage.getItem('token'), url: url, msg_type: 'none' }));
+  });
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
-    let output_message = document.createElement('div');
-    output_message.style.border = '1px solid #242424';
-    output_message.style.margin = '2%';
-    output_message.style.padding = '10px 15px';
-    output_message.style.backgroundColor = '#242424';
-    output_message.style.borderRadius = '4px';
-    output_message.style.fontSize = '12px';
-    output_message.style.fontWeight = 'bolder';
-    if(localStorage.getItem('username') == data.user) {
-      output_message.innerHTML = `
+    if (data.msg_type == 'msg') {
+      let output_message = document.createElement('div');
+      output_message.style.border = '1px solid #242424';
+      output_message.style.margin = '2%';
+      output_message.style.padding = '10px 15px';
+      output_message.style.backgroundColor = '#242424';
+      output_message.style.borderRadius = '4px';
+      output_message.style.fontSize = '12px';
+      output_message.style.fontWeight = 'bolder';
+      if (localStorage.getItem('username') == data.user) {
+        output_message.innerHTML = `
       <span style="color: #f44336">You:</span> <span style="color: #fff">${data.message}</span>`;
-    } else {
-      output_message.innerHTML = `
+      } else {
+        output_message.innerHTML = `
       <span style="color: #f44336">${data.user}:</span> <span style="color: #fff">${data.message}</span>`;
+      }
+      output.appendChild(output_message);
+      output_message.scrollIntoView();
     }
-    output_message.innerHTML = `
-    <span style="color: #f44336">${data.user}:</span> <span style="color: #fff">${data.message}</span>`;
-    output.appendChild(output_message);
-    output_message.scrollIntoView();
   }
 
 }
@@ -188,7 +193,7 @@ async function set_token() {
         return response.json()
       } else { return false }
     }).then(data => {
-      if(data.data["username"]) {
+      if (data.data["username"]) {
         localStorage.setItem('username', data.data.username);
         should_create_client = false;
       }
