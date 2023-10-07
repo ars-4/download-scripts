@@ -122,54 +122,57 @@ async function init() {
     output.innerHTML = '';
 
     for (let i = 0; i < messages.length; i++) {
-      const output_message = document.createElement('div');
-      output_message.style.border = '1px solid #242424';
-      output_message.style.margin = '2%';
-      output_message.style.padding = '10px 15px';
-      output_message.style.backgroundColor = '#242424';
-      output_message.style.borderRadius = '4px';
-      output_message.style.fontSize = '12px';
-      output_message.style.fontWeight = 'bolder';
-      if (localStorage.getItem('username') == messages[i].user) {
-        output_message.innerHTML = `
-      <span style="color: #f44336">You:</span> <span style="color: #fff">${messages[i].message}</span>`;
-      } else {
-        output_message.innerHTML = `
-      <span style="color: #f44336">${messages[i].user}:</span> <span style="color: #fff">${messages[i].message}</span>`;
-      } output.appendChild(output_message);
-      output_message.scrollIntoView();
+      send_output(output, messages[i]);
     }
 
     socket.send(JSON.stringify({ message: "Welcome to the chat", token: localStorage.getItem('token'), url: url, msg_type: 'none' }));
   }
 
-  window.addEventListener("hashchange", function(event) {
+  window.addEventListener("hashchange", function (event) {
     socket.send(JSON.stringify({ message: "Welcome to the chat", token: localStorage.getItem('token'), url: url, msg_type: 'none' }));
   });
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (data.msg_type == 'msg') {
-      let output_message = document.createElement('div');
-      output_message.style.border = '1px solid #242424';
-      output_message.style.margin = '2%';
-      output_message.style.padding = '10px 15px';
-      output_message.style.backgroundColor = '#242424';
-      output_message.style.borderRadius = '4px';
-      output_message.style.fontSize = '12px';
-      output_message.style.fontWeight = 'bolder';
-      if (localStorage.getItem('username') == data.user) {
-        output_message.innerHTML = `
-      <span style="color: #f44336">You:</span> <span style="color: #fff">${data.message}</span>`;
-      } else {
-        output_message.innerHTML = `
-      <span style="color: #f44336">${data.user}:</span> <span style="color: #fff">${data.message}</span>`;
-      }
-      output.appendChild(output_message);
-      output_message.scrollIntoView();
+      send_output(output, data);
     }
   }
 
+}
+
+function send_output(parentElement, data) {
+  if(data.message.includes('Welcome to the chat')) {
+    return;
+  }
+  const output_message = document.createElement('div');
+  output_message.style.border = '1px solid #242424';
+  output_message.style.margin = '2%';
+  output_message.style.wordBreak = 'break-all';
+  output_message.style.padding = '10px 15px';
+  output_message.style.backgroundColor = '#242424';
+  output_message.style.borderRadius = '4px';
+  output_message.style.fontSize = '12px';
+  output_message.style.fontWeight = 'bolder';
+  let user = localStorage.getItem('username') == data.user ? 'You' : data.user;
+  let user_span = document.createElement('span');
+  user_span.innerHTML = `${user}: `;
+  user_span.style.color = '#f44336';
+  output_message.appendChild(user_span);
+  let message_span = document.createElement('span');
+  if(data.message.includes('http') && data.message.includes('png') || data.message.includes('jpg') || data.message.includes('jpeg') || data.message.includes('gif')) {
+    message_span.innerHTML = `<a href="${data.message}" target="_blank">
+      <img src="${data.message}" style="max-width: 100%; max-height: 100%;">
+    </a>`
+  } else if(data.message.includes('http')) {
+    message_span.innerHTML = `<a href="${data.message}" style="color: #f44336" target="_blank">${data.message.split('files/')[0].toLowerCase()}</a>`
+  }else {
+    message_span.innerHTML = data.message;
+  }
+  message_span.style.color = '#fff';
+  output_message.appendChild(message_span);
+  parentElement.appendChild(output_message);
+  output_message.scrollIntoView();
 }
 
 function is_new_user() {
@@ -178,9 +181,10 @@ function is_new_user() {
 }
 
 async function set_token() {
-  should_create_client = true;
+  let should_create_client = true;
   if (is_new_user()) {
     console.log('new user');
+    await create_client();
   } else {
     await fetch(`http://${baseUri}/chat/validate_token/`, {
       method: 'POST',
