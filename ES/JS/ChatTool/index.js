@@ -165,7 +165,7 @@ function send_output(parentElement, data) {
       <img src="${data.message}" style="max-width: 100%; max-height: 100%;">
     </a>`
   } else if(data.message.includes('http')) {
-    message_span.innerHTML = `<a href="${data.message}" style="color: #f44336" target="_blank">${data.message.split('files/')[0].toLowerCase()}</a>`
+    message_span.innerHTML = `<a href="${data.message}" style="color: #f44336" target="_blank">${data.message.split('files/')[1].toLowerCase()}</a>`
   }else {
     message_span.innerHTML = data.message;
   }
