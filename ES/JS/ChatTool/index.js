@@ -1,5 +1,13 @@
 const container = document.querySelector('.chat-tool');
 const baseUri = '127.0.0.1:8000';
+const primary_color = '#42b983';
+
+const options = {
+  primary_color: '#f44336',
+  secondary_color: "#242424",
+  accent_color: "#fff",
+  baseUri: '127.0.0.1:8000',
+}
 
 async function init() {
   container.style.position = 'fixed';
@@ -16,14 +24,14 @@ async function init() {
 
   let button = document.createElement('button');
   button.innerText = "+";
-  button.style.backgroundColor = '#f44336';
+  button.style.backgroundColor = options.primary_color;
   button.style.borderRadius = '50%';
   button.style.aspectRatio = '1';
   button.style.border = 'none';
   button.style.padding = '8px 16px';
   button.style.fontSize = '36px';
   button.style.cursor = 'pointer';
-  button.style.color = '#fff';
+  button.style.color = options.accent_color;
   button.style.position = 'absolute';
   button.style.right = '0';
   button.style.bottom = '0%';
@@ -33,8 +41,8 @@ async function init() {
   form.style.width = '0px';
   form.style.height = '0px';
   form.is_visible = false;
-  form.style.backgroundColor = '#fff';
-  form.style.border = '2px solid #242424';
+  form.style.backgroundColor = options.accent_color;
+  form.style.border = `2px solid ${options.secondary_color}`;
   form.style.borderRadius = '4px';
   form.style.position = 'absolute';
   form.style.right = '24px';
@@ -58,7 +66,7 @@ async function init() {
   inputGroup.style.overflow = 'hidden';
   inputGroup.style.margin = '8px 4px';
   inputGroup.style.borderRadius = '4px';
-  inputGroup.style.border = '1px solid #242424';
+  inputGroup.style.border = `1px solid ${options.secondary_color}`;
 
   let input = document.createElement('input');
   input.type = 'text';
@@ -71,11 +79,11 @@ async function init() {
 
   let inputButton = document.createElement('button');
   inputButton.innerText = "Send";
-  inputButton.style.backgroundColor = '#f44336';
+  inputButton.style.backgroundColor = options.primary_color;
   inputButton.style.width = '20%';
   inputButton.style.border = 'none';
   inputButton.style.padding = '8px';
-  inputButton.style.color = '#fff';
+  inputButton.style.color = options.accent_color;
   inputButton.style.cursor = 'pointer';
   inputGroup.appendChild(inputButton);
 
@@ -109,6 +117,14 @@ async function init() {
     }
   })
 
+  document.addEventListener('click', (event) => {
+    if(form.is_visible && event.target !== button && event.target !== form && !form.contains(event.target)) {
+      form.style.width = '0px';
+      form.style.height = '0px';
+      form.is_visible = false;
+    }
+  })
+
   container.appendChild(button);
   container.appendChild(form);
 
@@ -135,6 +151,10 @@ async function init() {
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (data.msg_type == 'msg') {
+      if(data.user != localStorage.getItem('username')) {
+        send_output(output, data);
+        alert(data.user + ': ' + data.message);
+      }
       send_output(output, data);
     }
   }
@@ -146,18 +166,18 @@ function send_output(parentElement, data) {
     return;
   }
   const output_message = document.createElement('div');
-  output_message.style.border = '1px solid #242424';
+  output_message.style.border = `1px solid ${options.secondary_color}`;
   output_message.style.margin = '2%';
   output_message.style.wordBreak = 'break-all';
   output_message.style.padding = '10px 15px';
-  output_message.style.backgroundColor = '#242424';
+  output_message.style.backgroundColor = options.secondary_color;
   output_message.style.borderRadius = '4px';
   output_message.style.fontSize = '12px';
   output_message.style.fontWeight = 'bolder';
   let user = localStorage.getItem('username') == data.user ? 'You' : data.user;
   let user_span = document.createElement('span');
   user_span.innerHTML = `${user}: `;
-  user_span.style.color = '#f44336';
+  user_span.style.color = options.primary_color;
   output_message.appendChild(user_span);
   let message_span = document.createElement('span');
   if(data.message.includes('http') && data.message.includes('png') || data.message.includes('jpg') || data.message.includes('jpeg') || data.message.includes('gif')) {
@@ -165,11 +185,11 @@ function send_output(parentElement, data) {
       <img src="${data.message}" style="max-width: 100%; max-height: 100%;">
     </a>`
   } else if(data.message.includes('http')) {
-    message_span.innerHTML = `<a href="${data.message}" style="color: #f44336" target="_blank">${data.message.split('files/')[1].toLowerCase()}</a>`
-  }else {
+    message_span.innerHTML = `<a href="${data.message}" style="color: ${options.primary_color}" target="_blank">${data.message.split('files/')[1].toLowerCase()}</a>`
+  } else {
     message_span.innerHTML = data.message;
   }
-  message_span.style.color = '#fff';
+  message_span.style.color = options.accent_color;
   output_message.appendChild(message_span);
   parentElement.appendChild(output_message);
   output_message.scrollIntoView();
