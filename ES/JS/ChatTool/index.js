@@ -1,12 +1,19 @@
 const container = document.querySelector('.chat-tool');
-const baseUri = '127.0.0.1:8000';
-const primary_color = '#42b983';
+
+const available_icons = [
+  "https://www.svgrepo.com/show/529487/chat-round.svg",
+  "https://www.svgrepo.com/show/525767/chat-round.svg",
+  "https://www.svgrepo.com/show/525764/chat-round-unread.svg"
+]
 
 const options = {
-  primary_color: '#f44336',
+  primary_color: '#fff',
   secondary_color: "#242424",
-  accent_color: "#fff",
+  accent_color: "#f44336",
+  background_color: "#fff",
+  foreground_color: "#242424",
   baseUri: '127.0.0.1:8000',
+  imageUrl: available_icons[1]
 }
 
 async function init() {
@@ -14,24 +21,21 @@ async function init() {
   container.style.right = '1%';
   container.style.bottom = '3%';
 
-  let style = document.getElementsByTagName('style')[0];
-  style.innerHTML += `\n
-  .no-scrollbar::-webkit-scrollbar {
-    display: none !important;
-  }\n
-  `
-  document.head.appendChild(style);
-
   let button = document.createElement('button');
-  button.innerText = "+";
-  button.style.backgroundColor = options.primary_color;
+  button.innerHTML = `<img src="${options.imageUrl}" alt="chat_bubble"
+  style="width: 30px;transform:rotateY(180deg);"
+  >`;
+  button.style.backgroundColor = options.background_color;
   button.style.borderRadius = '50%';
   button.style.aspectRatio = '1';
   button.style.border = 'none';
-  button.style.padding = '8px 16px';
+  button.style.display = 'flex';
+  button.style.justifyContent = 'center';
+  button.style.alignItems = 'center';
+  button.style.padding = '4px 8px';
   button.style.fontSize = '36px';
   button.style.cursor = 'pointer';
-  button.style.color = options.accent_color;
+  button.style.color = options.foreground_color;
   button.style.position = 'absolute';
   button.style.right = '0';
   button.style.bottom = '0%';
@@ -41,8 +45,8 @@ async function init() {
   form.style.width = '0px';
   form.style.height = '0px';
   form.is_visible = false;
-  form.style.backgroundColor = options.accent_color;
-  form.style.border = `2px solid ${options.secondary_color}`;
+  form.style.backgroundColor = options.background_color;
+  form.style.border = `2px solid ${options.foreground_color}`;
   form.style.borderRadius = '4px';
   form.style.position = 'absolute';
   form.style.right = '24px';
@@ -55,6 +59,8 @@ async function init() {
   // output.style.border = '1px solid #242424';
   output.style.overflowY = 'scroll';
   output.style.margin = '4px';
+  output.style.display = 'flex';
+  output.style.flexDirection = 'column';
   output.style.marginTop = '12px';
   output.style.height = '320px';
   form.appendChild(output);
@@ -66,7 +72,7 @@ async function init() {
   inputGroup.style.overflow = 'hidden';
   inputGroup.style.margin = '8px 4px';
   inputGroup.style.borderRadius = '4px';
-  inputGroup.style.border = `1px solid ${options.secondary_color}`;
+  inputGroup.style.border = `1px solid ${options.foreground_color}`;
 
   let input = document.createElement('input');
   input.type = 'text';
@@ -79,11 +85,11 @@ async function init() {
 
   let inputButton = document.createElement('button');
   inputButton.innerText = "Send";
-  inputButton.style.backgroundColor = options.primary_color;
+  inputButton.style.backgroundColor = options.background_color;
   inputButton.style.width = '20%';
   inputButton.style.border = 'none';
   inputButton.style.padding = '8px';
-  inputButton.style.color = options.accent_color;
+  inputButton.style.color = options.foreground_color;
   inputButton.style.cursor = 'pointer';
   inputGroup.appendChild(inputButton);
 
@@ -118,7 +124,7 @@ async function init() {
   })
 
   document.addEventListener('click', (event) => {
-    if(form.is_visible && event.target !== button && event.target !== form && !form.contains(event.target)) {
+    if (form.is_visible && event.target !== button && event.target != button.children[0] && event.target !== form && !form.contains(event.target)) {
       form.style.width = '0px';
       form.style.height = '0px';
       form.is_visible = false;
@@ -130,7 +136,7 @@ async function init() {
 
   await set_token();
 
-  const socket = new WebSocket(`ws://${baseUri}/ws/chats/${localStorage.getItem('username').replace('#', '').toLowerCase()}/?token=${localStorage.getItem('token')}`);
+  const socket = new WebSocket(`ws://${options.baseUri}/ws/chats/${localStorage.getItem('username').replace('#', '').toLowerCase()}/?token=${localStorage.getItem('token')}`);
 
   socket.onopen = async () => {
     console.log('connected');
@@ -151,45 +157,65 @@ async function init() {
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (data.msg_type == 'msg') {
-      if(data.user != localStorage.getItem('username')) {
+      if (data.user !== localStorage.getItem('username')) {
         send_output(output, data);
-        alert(data.user + ': ' + data.message);
+        options.imageUrl = available_icons[2]
+        // button.innerHTML = ``;
+        button.innerHTML = `<img src="${options.imageUrl}" alt="chat_bubble" 
+        style="width: 30px;transform:rotateY(180deg);">`;
+        // alert(data.user + ': ' + data.message);
+      } else {
+        send_output(output, data);
       }
-      send_output(output, data);
     }
   }
 
 }
 
 function send_output(parentElement, data) {
-  if(data.message.includes('Welcome to the chat')) {
+  if (data.message.includes('Welcome to the chat')) {
     return;
   }
   const output_message = document.createElement('div');
-  output_message.style.border = `1px solid ${options.secondary_color}`;
+  output_message.style.border = `1px solid ${options.foreground_color}`;
+  output_message.style.position = 'relative';
   output_message.style.margin = '2%';
+  output_message.style.width = '60%';
   output_message.style.wordBreak = 'break-all';
   output_message.style.padding = '10px 15px';
-  output_message.style.backgroundColor = options.secondary_color;
+  // output_message.style.backgroundColor = options.secondary_color;
+  output_message.style.backgroundColor = localStorage.getItem('username') == data.user ? options.background_color : options.foreground_color;
   output_message.style.borderRadius = '4px';
   output_message.style.fontSize = '12px';
   output_message.style.fontWeight = 'bolder';
-  let user = localStorage.getItem('username') == data.user ? 'You' : data.user;
+  let triangle_span = document.createElement('span');
+  triangle_span.style.position = 'absolute';
+  triangle_span.style.bottom = '-8px';
+  triangle_span.style.left = '0';
+  triangle_span.style.width = '30px';
+  triangle_span.style.height = '30px';
+  triangle_span.style.transform = 'rotate(45deg)';
+  triangle_span.style.backgroundColor = '#000';
+  // output_message.appendChild(triangle_span);
   let user_span = document.createElement('span');
+  let user = localStorage.getItem('username') == data.user ? 'You' : data.user;
+  output_message.style.marginLeft = localStorage.getItem('username') == data.user ? "25%" : '0';
   user_span.innerHTML = `${user}: `;
-  user_span.style.color = options.primary_color;
+  user_span.style.color = options.accent_color;
   output_message.appendChild(user_span);
   let message_span = document.createElement('span');
-  if(data.message.includes('http') && data.message.includes('png') || data.message.includes('jpg') || data.message.includes('jpeg') || data.message.includes('gif')) {
+  if (data.message.includes('http') && data.message.includes('png') || data.message.includes('jpg') || data.message.includes('jpeg') || data.message.includes('gif')) {
     message_span.innerHTML = `<a href="${data.message}" target="_blank">
       <img src="${data.message}" style="max-width: 100%; max-height: 100%;">
     </a>`
-  } else if(data.message.includes('http')) {
-    message_span.innerHTML = `<a href="${data.message}" style="color: ${options.primary_color}" target="_blank">${data.message.split('files/')[1].toLowerCase()}</a>`
+  } else if (data.message.includes('http')) {
+    message_span.innerHTML = `<a href="${data.message}" style="color: ${options.accent_color}" target="_blank">${data.message.split('files/')[1].toLowerCase()}</a>`
   } else {
     message_span.innerHTML = data.message;
   }
-  message_span.style.color = options.accent_color;
+  // message_span.style.color = options.accent_color;
+  message_span.style.color = localStorage.getItem('username') == data.user ? options.foreground_color : options.background_color;
+  message_span.style.zIndex = '1';
   output_message.appendChild(message_span);
   parentElement.appendChild(output_message);
   output_message.scrollIntoView();
@@ -206,7 +232,7 @@ async function set_token() {
     console.log('new user');
     await create_client();
   } else {
-    await fetch(`http://${baseUri}/chat/validate_token/`, {
+    await fetch(`http://${options.baseUri}/chat/validate_token/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -232,7 +258,7 @@ async function set_token() {
 
 
 async function create_client() {
-  await fetch(`http://${baseUri}/chat/create_client/`, {
+  await fetch(`http://${options.baseUri}/chat/create_client/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -246,7 +272,7 @@ async function create_client() {
 }
 
 async function get_previous_messages() {
-  let messages = await fetch(`http://${baseUri}/chat/api/messages/${localStorage.getItem('username').replace('#', '').toLowerCase()}/`, {
+  let messages = await fetch(`http://${options.baseUri}/chat/api/messages/${localStorage.getItem('username').replace('#', '').toLowerCase()}/`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
