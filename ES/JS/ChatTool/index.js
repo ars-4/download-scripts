@@ -3,7 +3,8 @@ const container = document.querySelector('.chat-tool');
 const available_icons = [
   "https://www.svgrepo.com/show/529487/chat-round.svg",
   "https://www.svgrepo.com/show/525767/chat-round.svg",
-  "https://www.svgrepo.com/show/525764/chat-round-unread.svg"
+  "https://www.svgrepo.com/show/525764/chat-round-unread.svg",
+  "https://www.svgrepo.com/show/457779/user-box.svg"
 ]
 
 const options = {
@@ -13,13 +14,15 @@ const options = {
   background_color: "#fff",
   foreground_color: "#242424",
   baseUri: '127.0.0.1:8000',
-  imageUrl: available_icons[1]
+  imageUrl: available_icons[1],
+  font: 'Roboto'
 }
 
 async function init() {
   container.style.position = 'fixed';
   container.style.right = '1%';
   container.style.bottom = '3%';
+  container.style.display = 'none';
 
   let button = document.createElement('button');
   button.innerHTML = `<img src="${options.imageUrl}" alt="chat_bubble"
@@ -48,12 +51,40 @@ async function init() {
   form.style.backgroundColor = options.background_color;
   form.style.border = `2px solid ${options.foreground_color}`;
   form.style.borderRadius = '4px';
+  form.style.fontFamily = options.font;
   form.style.position = 'absolute';
   form.style.right = '24px';
   form.style.bottom = '24px';
   form.style.transition = '0.5s';
   form.style.overflow = 'hidden';
   form.classList.add('no-scrollbar');
+
+  let personal_information_div = document.createElement("div");
+  let personal_name = document.createElement("span");
+  let personal_email = document.createElement("span");
+  personal_information_div.innerHTML=`
+    <table>
+      <tr>
+        <td><img src="${available_icons[3]}" style="width: 45px;aspect-ratio:1/1;filter:invert(100%)"></td>
+        <td>
+          <input type="text" style="font-size: 11px;color:${options.accent_color};border:none;border-radius:4px;padding:2px;outline:none;" id="personal_name" value="${localStorage.getItem('name')}">
+          <br>
+          <input type="text" style="font-size: 11px;color:${options.accent_color};border:none;border-radius:4px;padding:2px;outline:none;" id="personal_email" value="${localStorage.getItem('email')}">
+        </td>
+      </tr>
+    </table>
+  `;
+  personal_information_div.style.display = "flex";
+  personal_information_div.style.justifyContent = "space-between";
+  personal_information_div.style.alignItems = "flex-start";
+  personal_information_div.style.flexDirection = "column";
+  personal_information_div.style.border = '1px solid #242424';
+  personal_information_div.style.padding = '1px';
+  personal_information_div.style.marginBottom = '4px';
+  personal_information_div.style.marginTop = '0px';
+  personal_information_div.style.background = options.foreground_color;
+  personal_information_div.style.color = options.foreground_color;
+  form.appendChild(personal_information_div);
 
   let output = document.createElement('div');
   // output.style.border = '1px solid #242424';
@@ -62,7 +93,7 @@ async function init() {
   output.style.display = 'flex';
   output.style.flexDirection = 'column';
   output.style.marginTop = '12px';
-  output.style.height = '320px';
+  output.style.height = '265px';
   form.appendChild(output);
 
   let inputGroup = document.createElement('div');
@@ -143,12 +174,21 @@ async function init() {
     let messages = await get_previous_messages();
     output.innerHTML = '';
 
+    container.style.display = 'block';
+
     for (let i = 0; i < messages.length; i++) {
       send_output(output, messages[i]);
     }
 
-    socket.send(JSON.stringify({ message: "Welcome to the chat", token: localStorage.getItem('token'), url: url, msg_type: 'none' }));
+    socket.send(JSON.stringify({ message: "Welcome to the chat", token: localStorage.getItem('token'), url: url, msg_type: 'none'}));
   }
+
+  document.getElementById('personal_name').addEventListener("focusout", function (event) {
+    socket.send(JSON.stringify({ message: "Welcome to the chat", token: localStorage.getItem('token'), url: url, msg_type: 'none', personal_name: event.target.value }));
+  })
+  document.getElementById('personal_email').addEventListener("focusout", function (event) {
+    socket.send(JSON.stringify({ message: "Welcome to the chat", token: localStorage.getItem('token'), url: url, msg_type: 'none', personal_email: event.target.value }));
+  })
 
   window.addEventListener("hashchange", function (event) {
     socket.send(JSON.stringify({ message: "Welcome to the chat", token: localStorage.getItem('token'), url: url, msg_type: 'none' }));
@@ -245,6 +285,8 @@ async function set_token() {
     }).then(data => {
       if (data.data["username"]) {
         localStorage.setItem('username', data.data.username);
+        localStorage.setItem('name', data.data.name);
+        localStorage.setItem('email', data.data.email);
         should_create_client = false;
       }
     }).catch(error => {
@@ -268,6 +310,8 @@ async function create_client() {
   }).then(data => {
     localStorage.setItem('token', data.data.token);
     localStorage.setItem('username', data.data.username);
+    localStorage.setItem('name', data.data.name);
+    localStorage.setItem('email', data.data.email);
   })
 }
 
