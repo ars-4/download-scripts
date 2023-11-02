@@ -7,16 +7,14 @@ const available_icons = [
   "https://www.svgrepo.com/show/457779/user-box.svg"
 ]
 
-const options = {
-  primary_color: '#fff',
-  secondary_color: "#242424",
-  accent_color: "#f44336",
-  background_color: "#fff",
-  foreground_color: "#242424",
-  baseUri: '127.0.0.1:8000',
-  imageUrl: available_icons[1],
-  font: 'Roboto'
-}
+// let options = {
+//   accent_color: "#f44336",
+//   background_color: "#fff",
+//   foreground_color: "#242424",
+//   baseUri: '127.0.0.1:8000',
+//   imageUrl: available_icons[1],
+//   font: 'Roboto'
+// }
 
 async function init() {
   container.style.position = 'fixed';
