@@ -165,7 +165,7 @@ async function init() {
 
   await set_token();
 
-  const socket = new WebSocket(`ws://${options.baseUri}/ws/chats/${localStorage.getItem('username').replace('#', '').toLowerCase()}/?token=${localStorage.getItem('token')}`);
+  const socket = new WebSocket(`wss://${options.baseUri}/ws/chats/${localStorage.getItem('username').replace('#', '').toLowerCase()}/?token=${localStorage.getItem('token')}`);
 
   socket.onopen = async () => {
     console.log('connected');
