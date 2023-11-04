@@ -242,11 +242,11 @@ function send_output(parentElement, data) {
   user_span.style.color = options.accent_color;
   output_message.appendChild(user_span);
   let message_span = document.createElement('span');
-  if (data.message.includes('http') && data.message.includes('png') || data.message.includes('jpg') || data.message.includes('jpeg') || data.message.includes('gif')) {
+  if (data.message.includes('https') && data.message.includes('png') || data.message.includes('jpg') || data.message.includes('jpeg') || data.message.includes('gif')) {
     message_span.innerHTML = `<a href="${data.message}" target="_blank">
       <img src="${data.message}" style="max-width: 100%; max-height: 100%;">
     </a>`
-  } else if (data.message.includes('http')) {
+  } else if (data.message.includes('https') || data.message.includes('http')) {
     message_span.innerHTML = `<a href="${data.message}" style="color: ${options.accent_color}" target="_blank">${data.message.split('files/')[1].toLowerCase()}</a>`
   } else {
     message_span.innerHTML = data.message;
@@ -270,7 +270,7 @@ async function set_token() {
     console.log('new user');
     await create_client();
   } else {
-    await fetch(`http://${options.baseUri}/chat/validate_token/`, {
+    await fetch(`https://${options.baseUri}/chat/validate_token/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -298,7 +298,7 @@ async function set_token() {
 
 
 async function create_client() {
-  await fetch(`http://${options.baseUri}/chat/create_client/`, {
+  await fetch(`https://${options.baseUri}/chat/create_client/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -314,7 +314,7 @@ async function create_client() {
 }
 
 async function get_previous_messages() {
-  let messages = await fetch(`http://${options.baseUri}/chat/api/messages/${localStorage.getItem('username').replace('#', '').toLowerCase()}/`, {
+  let messages = await fetch(`https://${options.baseUri}/chat/api/messages/${localStorage.getItem('username').replace('#', '').toLowerCase()}/`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
