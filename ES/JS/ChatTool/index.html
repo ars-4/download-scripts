@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,14 +10,21 @@
 <style>
     body {
         min-height: 1000vh;
-	background: linear-gradient(to bottom right, red, green, blue, red, green, blue);
+        background: linear-gradient(to bottom right, red, green, blue, red, green, blue);
     }
 </style>
 
 <body>
-    
+
     <div class="chat-tool"></div>
+    <script>
+        options = {
+            accent_color: '#f44336', background_color: '#fff', foreground_color: '#242424',
+            baseUri: '127.0.0.1:8000', imageUrl: 'https://www.svgrepo.com/show/435806/chat-bubble.svg', font: 'Roboto'
+        };
+    </script>
     <script src="index.js" type="module"></script>
 
 </body>
+
 </html>

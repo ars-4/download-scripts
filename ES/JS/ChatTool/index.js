@@ -1,4 +1,8 @@
 const container = document.querySelector('.chat-tool');
+let fetchUri = `https://${options.baseUri}`;
+if(options.baseUri.includes('127.0.0.1')) {
+  fetchUri = `http://${options.baseUri}`;
+}
 
 const available_icons = [
   "https://www.svgrepo.com/show/529487/chat-round.svg",
@@ -20,7 +24,7 @@ async function init() {
   container.style.position = 'fixed';
   container.style.right = '1%';
   container.style.bottom = '3%';
-  container.style.display = 'none';
+  container.style.display = 'block';
 
   let button = document.createElement('button');
   button.innerHTML = `<img src="${options.imageUrl}" alt="chat_bubble"
@@ -65,9 +69,9 @@ async function init() {
       <tr>
         <td><img src="${available_icons[3]}" style="width: 45px;aspect-ratio:1/1;filter:invert(100%)"></td>
         <td>
-          <input type="text" style="font-size: 11px;color:${options.accent_color};border:none;border-radius:4px;padding:2px;outline:none;" id="personal_name" value="${localStorage.getItem('name')}">
+          <input type="text" style="border:none;outline:none;background:transparent;font-size:11px;color:${options.accent_color};border:none;border-radius:4px;padding:2px;outline:none;" id="personal_name" value="${localStorage.getItem('name')}">
           <br>
-          <input type="text" style="font-size: 11px;color:${options.accent_color};border:none;border-radius:4px;padding:2px;outline:none;" id="personal_email" value="${localStorage.getItem('email')}">
+          <input type="text" style="border:none;outline:none;background:transparent;font-size: 11px;color:${options.accent_color};border:none;border-radius:4px;padding:2px;outline:none;" id="personal_email" value="${localStorage.getItem('email')}">
         </td>
       </tr>
     </table>
@@ -165,7 +169,12 @@ async function init() {
 
   await set_token();
 
-  const socket = new WebSocket(`wss://${options.baseUri}/ws/chats/${localStorage.getItem('username').replace('#', '').toLowerCase()}/?token=${localStorage.getItem('token')}`);
+  let socket;
+  if(options.baseUri.includes('127.0.0.1')) {
+    socket = new WebSocket(`ws://${options.baseUri}/ws/chats/${localStorage.getItem('username').replace('#', '').toLowerCase()}/?token=${localStorage.getItem('token')}`);
+  } else {
+    socket = new WebSocket(`wss://${options.baseUri}/ws/chats/${localStorage.getItem('username').replace('#', '').toLowerCase()}/?token=${localStorage.getItem('token')}`);
+  }
 
   socket.onopen = async () => {
     console.log('connected');
@@ -270,7 +279,7 @@ async function set_token() {
     console.log('new user');
     await create_client();
   } else {
-    await fetch(`https://${options.baseUri}/chat/validate_token/`, {
+    await fetch(`${fetchUri}/chat/validate_token/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -298,7 +307,7 @@ async function set_token() {
 
 
 async function create_client() {
-  await fetch(`https://${options.baseUri}/chat/create_client/`, {
+  await fetch(`${fetchUri}/chat/create_client/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -314,7 +323,7 @@ async function create_client() {
 }
 
 async function get_previous_messages() {
-  let messages = await fetch(`https://${options.baseUri}/chat/api/messages/${localStorage.getItem('username').replace('#', '').toLowerCase()}/`, {
+  let messages = await fetch(`${fetchUri}/chat/api/messages/${localStorage.getItem('username').replace('#', '').toLowerCase()}/`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
